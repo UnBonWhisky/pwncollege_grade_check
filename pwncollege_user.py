@@ -89,3 +89,16 @@ class pwncollegeUser:
             }
             for mod in self.modules
         ]
+
+
+def read_info(user):
+    with open(f"users/{user}", 'r') as f:
+        j = json.loads(f.read())
+        res = ""
+        for category in j :
+            if category["challenges"]:
+                res += category["title"]+"\n"
+                for chall in category["challenges"]:
+                    res += "    ✅ "+chall["name"]+"\n"
+    print(res)
+                
