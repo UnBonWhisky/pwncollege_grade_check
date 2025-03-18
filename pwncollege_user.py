@@ -64,11 +64,9 @@ class pwncollegeUser:
                 clean_name = re.sub(r'($ easy $|$ hard $|\uf024\s*|\d+ pts?)', '', full_title).strip()
                 level = ''.join(re.findall(r'\d+', full_title)) or '0'
 
-                timestamp = None
-                if time_tag:
-                    parts = time_tag.get_text(strip=True).split(':', 1)
-                    if len(parts) > 1 and re.match(r'\d{4}-\d{2}-\d{2}', parts[1]):
-                        timestamp = parts[1].strip()
+
+                parts = time_tag.get_text(strip=True).split(':', 1)
+                timestamp = parts[1].strip()
 
                 challenges.append({
                     'name': clean_name,
