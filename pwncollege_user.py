@@ -106,7 +106,11 @@ def compare_progress(user, delay):
                 chall_time = datetime.datetime.strptime(chall["timestamp"], "%Y-%m-%d %H:%M:%S")
                 if chall_time > time_d:
                     res += f"{user} just SOLVED: ✅ {category['title']} : {chall['name']}\n"
-    res += maxime_quote()
+
+    if res == "" :
+        return None
+    else :
+        res += "_"+maxime_quote()+"_"
     return res
 
 
@@ -119,4 +123,4 @@ def read_info(user):
                 res += category["title"] + ":\n"
                 for chall in category["challenges"]:
                     res += "    ✅ " + chall["name"] + "\n"
-    print(res)
+    return res

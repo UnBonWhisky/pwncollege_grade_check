@@ -1,4 +1,4 @@
-from pwncollege_user import pwncollegeUser, read_info
+from pwncollege_user import pwncollegeUser, read_info, compare_progress
 import discord
 from discord.ext import tasks, commands
 from dotenv import load_dotenv
@@ -12,7 +12,8 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 TOKEN = os.getenv("TOKEN")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))  
+CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
+DELAY=5
 
 
 @bot.event
@@ -46,14 +47,18 @@ async def get_info(ctx, username: str):
 
 
 #automation
-@tasks.loop(minutes=10)
+@tasks.loop(minutes=DELAY)
 async def send_message():
-    try:
-        channel = await bot.fetch_channel(CHANNEL_ID)
-        await channel.send(f"Automatic Maxime : _{maxime_quote()}_ ⏰")
 
-    except (discord.NotFound, discord.Forbidden) as e:
-        print(f"Erreur de salon : {e}")
+    channel = await bot.fetch_channel(CHANNEL_ID)
+    
+    for user in os.listdir("users"):
+        u = pwncollegeUser(user)  
+        u.init() 
+
+        info = compare_progress(user, DELAY)
+        if info:
+            await channel.send(info)
 
 
 
