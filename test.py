@@ -1,4 +1,4 @@
 from pwncollege_user import *
 
 
-read_info("lululufr")
+print(compare_progress("lululufr",30))
