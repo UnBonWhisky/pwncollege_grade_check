@@ -96,7 +96,7 @@ class pwncollegeUser:
 
 def compare_progress(user, delay):
 
-    time_d = datetime.datetime.now() - datetime.timedelta(minutes=delay, hours=2)
+    time_d = datetime.datetime.now() - datetime.timedelta(minutes=(delay+120)) # a modifier lors du changement d'heure... 
     with open(f"users/{user}", "r") as f:
         j = json.load(f)
 
