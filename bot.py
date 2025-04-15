@@ -4,6 +4,7 @@ from discord.ext import tasks, commands
 from dotenv import load_dotenv
 import os
 from maxime import maxime_quote
+from debug import *
 
 load_dotenv()
 
@@ -13,7 +14,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 TOKEN = os.getenv("TOKEN")
 CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
-DELAY=5
+DELAY=6
 
 
 @bot.event
@@ -31,24 +32,40 @@ async def subscribe(ctx, username: str):
         f"✅ {ctx.author.mention} inscrit avec le pseudo **{username}**\n"
         f"_{maxime_quote()}_"
     )
+    debug(f"commande subscribe effectué par {ctx.author.mention} : {username}")
     await ctx.send(message)
+
 
 @bot.command(name="get")
 async def get_info(ctx, username: str):
     """Commande : !get <pseudo>"""
+    debug(f"commande GET effectué par {ctx.author.mention}")
     info = read_info(username)
-    message = (
-        f"==> {ctx.author.mention}\n"
+    base_message = (
         f"{info}\n"
         f"_{maxime_quote()}_"
     )
-    await ctx.send(message)
+    #debug(f"Message a envoyer : {base_message}")
+    
+    max_chars = 1900
+    
+    if len(base_message) > max_chars:
+        message_chunks = [base_message[i:i+max_chars] for i in range(0, len(base_message), max_chars)]
+        
+        for i, chunk in enumerate(message_chunks):
+            if i == 0:
+                await ctx.send(f"```\n{chunk}\n``` (1/{len(message_chunks)})")
+            else:
+                await ctx.send(f"```\n{chunk}\n``` ({i+1}/{len(message_chunks)})")
+    else:
+        await ctx.send(f"```\n{base_message}\n```")
 
 
 
 #automation
 @tasks.loop(minutes=DELAY)
 async def send_message():
+    debug(f"Update DB - check solve")
 
     channel = await bot.fetch_channel(CHANNEL_ID)
     
@@ -57,10 +74,9 @@ async def send_message():
         u.init() 
 
         info = compare_progress(user, DELAY)
+        debug(f" info : {info}")
         if info:
             await channel.send(info)
-
-
 
 
 

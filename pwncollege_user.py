@@ -4,6 +4,7 @@ import re
 import json
 import datetime
 from maxime import maxime_quote
+from debug import *
 
 class pwncollegeUser:
     def __init__(self, user):
@@ -94,8 +95,8 @@ class pwncollegeUser:
 
 
 def compare_progress(user, delay):
-    time_d = datetime.datetime.now() - datetime.timedelta(minutes=delay)
 
+    time_d = datetime.datetime.now() - datetime.timedelta(minutes=delay, hours=2)
     with open(f"users/{user}", "r") as f:
         j = json.load(f)
 
@@ -104,8 +105,8 @@ def compare_progress(user, delay):
         if category.get("challenges"):
             for chall in category["challenges"]:
                 chall_time = datetime.datetime.strptime(chall["timestamp"], "%Y-%m-%d %H:%M:%S")
-                if chall_time > time_d:
-                    res += f"{user} just SOLVED: ✅ {category['title']} : {chall['name']}\n"
+                if chall_time >= time_d:
+                    res += f"{user} just SOLVED:\n```✅ {category['title']} : {chall['name']}```\n"
 
     if res == "" :
         return None
@@ -115,12 +116,15 @@ def compare_progress(user, delay):
 
 
 def read_info(user):
+    debug(f"reading info for {user}")
     with open(f"users/{user}", "r") as f:
         j = json.loads(f.read())
         res = ""
         for category in j:
             if category["challenges"]:
                 res += category["title"] + ":\n"
+                debug(f'category {category["title"]}')
                 for chall in category["challenges"]:
-                    res += "    ✅ " + chall["name"] + "\n"
+                    res += "    ✅ - " + chall["name"] + "\n"
+                    debug(f'chall {chall["name"]}')
     return res
