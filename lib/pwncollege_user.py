@@ -3,8 +3,17 @@ from bs4 import BeautifulSoup
 import re
 import json
 import datetime
-from maxime import maxime_quote
-from debug import *
+
+
+import sys
+import os
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
+
+
+from lib.maxime import maxime_quote
+from lib.debug import *
 
 class pwncollegeUser:
     def __init__(self, user):

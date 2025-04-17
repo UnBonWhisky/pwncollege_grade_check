@@ -1,10 +1,18 @@
-from pwncollege_user import pwncollegeUser, read_info, compare_progress
 import discord
 from discord.ext import tasks, commands
 from dotenv import load_dotenv
 import os
-from maxime import maxime_quote
-from debug import *
+
+
+import sys
+import os
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
+
+from lib.pwncollege_user import pwncollegeUser, read_info, compare_progress
+from lib.maxime import maxime_quote
+from lib.debug import *
 
 load_dotenv()
 
