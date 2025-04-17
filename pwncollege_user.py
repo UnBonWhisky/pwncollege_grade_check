@@ -8,14 +8,16 @@ from debug import *
 
 class pwncollegeUser:
     def __init__(self, user):
+        self.user = user
+        debug(f"Getting info for : {self.user}")
         self.base_url = f"https://pwn.college/hacker/{user}"
         self.session = requests.Session()
         self._refresh_data()
         self.modules = self._get_modules()
-        self.user = user
+        
 
     def init(self):
-        debug(f"Getting info for : {self.user}")
+        
         with open(f"users/{self.user}", "w") as f:
             json.dump(self.get_all_info(), f, indent=4)
 
