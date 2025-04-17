@@ -48,10 +48,12 @@ async def subscribe(ctx, username: str):
 async def get_info(ctx, username: str):
     """Commande : !get <pseudo>"""
     debug(f"commande GET effectué par {ctx.author.mention}")
+    
     info = read_info(username)
+    
     base_message = (
         f"{info}\n"
-        f"_{maxime_quote()}_"
+        f"{maxime_quote()}"
     )
     #debug(f"Message a envoyer : {base_message}")
     
