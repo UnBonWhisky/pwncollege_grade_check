@@ -15,6 +15,7 @@ class pwncollegeUser:
         self.user = user
 
     def init(self):
+        debug(f"Getting info for : {self.user}")
         with open(f"users/{self.user}", "w") as f:
             json.dump(self.get_all_info(), f, indent=4)
 
@@ -128,3 +129,17 @@ def read_info(user):
                     res += "    ✅ - " + chall["name"] + "\n"
                     debug(f'chall {chall["name"]}')
     return res
+
+
+def get_grade_cate_user(category_check, user):
+
+    with open(f"users/{user}", "r") as f:
+        j = json.load(f)
+
+    grades_cate = 0
+    for category in j:
+        if category.get("challenges") and category.get("title") == category_check:
+            for chall in category["challenges"]:
+                    grades_cate += 1 
+
+    return grades_cate
