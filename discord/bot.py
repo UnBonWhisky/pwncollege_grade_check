@@ -22,7 +22,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 TOKEN = os.getenv("TOKEN")
 CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
-DELAY=6
+DELAY=20
 
 
 @bot.event
