@@ -112,18 +112,18 @@ def compare_progress(user, delay):
     with open(f"users/{user}", "r") as f:
         j = json.load(f)
 
-    res = ""
+    app = ""
     for category in j:
         if category.get("challenges"):
             for chall in category["challenges"]:
                 chall_time = datetime.datetime.strptime(chall["timestamp"], "%Y-%m-%d %H:%M:%S")
                 if chall_time >= time_d:
-                    res += f"### **{user}** 🥋 Solve :```✅ {category['title']} : {chall['name']}```\n"
+                    app += f"```✅ {category['title']} : {chall['name']}```\n"
 
-    if res == "" :
+    if app == "" :
         return None
     else :
-        res += "_"+maxime_quote()+"_"
+        res = f"### **{user}** 🥋 Solve :\n" + app + "_"+maxime_quote()+"_"
     return res
 
 
