@@ -14,7 +14,6 @@ nb_challenge_solved: UserInformations = pwncollege.get_user_solves(
     category=category, # Optional: filter solves by category
     since=datetime.datetime(2024, 6, 1)  # Optional: filter solves since a specific date
 )
-print(f"NB chall solved : {nb_challenge_solved.solves_count}")
 for key in nb_challenge_solved.solves.keys():
     print(f"Category: {key}")
     print("Solves :")

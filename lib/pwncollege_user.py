@@ -1,6 +1,5 @@
 from bs4 import BeautifulSoup
-import json, os, requests, sys, datetime
-from pydantic import BaseModel
+import os, requests, sys, datetime
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
