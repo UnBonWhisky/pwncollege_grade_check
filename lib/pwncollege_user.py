@@ -1,156 +1,119 @@
-import requests
 from bs4 import BeautifulSoup
-import re
-import json
-import datetime
-
-
-import sys
-import os
+import json, os, requests, sys, datetime
+from pydantic import BaseModel
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
 
 
-from lib.maxime import maxime_quote
+# from lib.maxime import maxime_quote
 from lib.debug import *
 
+class UserInformations():
+    def __init__(
+        self,
+        username: str,
+        userId: int,
+        solves: dict | None = None,
+        solves_count: int = 0
+    ):
+        """
+        Initialize the UserInformations object.
+        :param username: The username of the user.
+        :param userId: The userId of the user.
+        :param solves: A dictionary containing the solves of the user, where the key is the
+                      category and the value is a list of lists containing the level and the date of the solve.
+        :param solves_count: The number of solves of the user.
+        """
+        self.username = username
+        self.userId = userId
+        self.solves = solves if solves is not None else {}
+        self.solves_count = solves_count
+        
+    def __repr__(self):
+        return f"UserInformations(username={self.username}, userId={self.userId}, solves_count={self.solves_count})"
+    def __str__(self):
+        return f"UserInformations(username={self.username}, userId={self.userId}, solves_count={self.solves_count})"
+    
 class pwncollegeUser:
-    def __init__(self, user):
-        self.user = user
-        debug(f"Getting info for : {self.user}")
-        self.base_url = f"https://pwn.college/hacker/{user}"
-        self.session = requests.Session()
-        self._refresh_data()
-        self.modules = self._get_modules()
+    def __init__(self):
+        self.user_url = "https://pwn.college/hacker/{}"
+        self.users_solves_url = "https://pwn.college/api/v1/users/{}/solves"
         
-
-    def init(self):
         
-        with open(f"users/{self.user}", "w") as f:
-            json.dump(self.get_all_info(), f, indent=4)
-
-    def _refresh_data(self):
-        response = self.session.get(self.base_url)
-        response.raise_for_status()
-        self.soup = BeautifulSoup(response.text, "html.parser")
-
-    def _get_modules(self):
-        modules = []
-        header_pattern = re.compile(r"^modules-(?P<id>.+?)-header-(?P<suffix>\d+)$")
-
-        for header in self.soup.find_all("div", class_="accordion-item-header"):
-            header_id = header.get("id", "")
-            match = header_pattern.match(header_id)
-            if not match:
+    def get_user_solves(
+        self,
+        username: str = None,
+        category: str = None,
+        since: datetime.datetime = None
+    ) -> UserInformations:
+        """
+        Get the user solves from the pwncollege API.
+        """
+        
+        debug(f"Getting info for : {username}")
+        
+        resp = requests.get(
+            self.user_url.format(username),
+            allow_redirects=True
+        )
+        
+        UserPage = BeautifulSoup(resp.text, "html.parser")
+        
+        # Find the userId from the page. The userId is stored in a div with <div id="activity-tracker" user-id="[THE USER ID]">
+        userId = UserPage.find("div", id="activity-tracker")["user-id"]
+        
+        try :
+            userId = int(userId)
+        except ValueError:
+            debug(f"Error converting userId to int: {userId}")
+            raise ValueError("Invalid userId format")
+        
+        debug(f"UserId found : {userId}")
+        
+        # Get the user solves from the API
+        if since is not None:
+            # Format the datetime using this format : YYYY-MM-DD
+            solves_url = f"{self.users_solves_url.format(userId)}?since={since.strftime('%Y-%m-%d')}"
+        else:
+            solves_url = self.users_solves_url.format(userId)
+        
+        resp = requests.get(
+            solves_url,
+            allow_redirects=True
+        )
+        
+        if resp.status_code != 200 or resp.json()["success"] is False:
+            debug(f"Error getting user solves: {resp.status_code} - {resp.text}")
+            raise Exception("Error getting user solves")
+        
+        solves_informations = {}
+        
+        for solve in resp.json()["data"]:
+            solved_at = solve.get("date", None)
+            solved_at = datetime.datetime.fromisoformat(solved_at) if solved_at else None
+            
+            challenge_name = solve.get("challenge", {}).get("name", None)
+            challenge_category, level = challenge_name.split(":", 1) if challenge_name else (None, None)
+            
+            if category and challenge_category != category:
                 continue
-
-            button = header.find("button", {"data-target": True})
-            if not button:
+            elif challenge_category is None or level is None:
+                debug(f"Challenge category or level is None for challenge: {challenge_name}")
                 continue
-
-            body_id = button["data-target"].lstrip("#")
-
-            title_tag = header.find("h4", class_="accordion-item-name")
-            if not title_tag:
-                continue
-
-            modules.append(
-                {
-                    "id": match.group("id"),
-                    "body_id": body_id,
-                    "title": title_tag.get_text(strip=True),
-                }
-            )
-
-        return modules
-
-    def get_challenges(self, body_id):
-        container = self.soup.find("div", id=body_id, class_="collapse")
-        if not container:
-            return []
-
-        challenges = []
-        for challenge in container.find_all("div", class_="challenge-row"):
-            try:
-                title_tag = challenge.find("h4")
-                time_tag = challenge.find("h6")
-
-                full_title = title_tag.get_text(strip=True)
-                clean_name = re.sub(
-                    r"($ easy $|$ hard $|\uf024\s*|\d+ pts?)", "", full_title
-                ).strip()
-                level = "".join(re.findall(r"\d+", full_title)) or "0"
-
-                parts = time_tag.get_text(strip=True).split(":", 1)
-                timestamp = parts[1].strip()
-
-
-                challenges.append(
-                    {"name": clean_name, "level": level, "timestamp": timestamp}
-                )
-            except Exception as e:
-                continue
-
-        return challenges
-
-    def get_all_info(self):
-        return [
-            {
-                "id": mod["id"],
-                "title": mod["title"],
-                "challenges": self.get_challenges(mod["body_id"]),
-                "count": len(self.get_challenges(mod["body_id"])),
-            }
-            for mod in self.modules
-        ]
-
-
-def compare_progress(user, delay):
-
-    time_d = datetime.datetime.now() - datetime.timedelta(minutes=delay) # a modifier lors du changement d'heure... 
-    with open(f"users/{user}", "r") as f:
-        j = json.load(f)
-
-    app = ""
-    for category in j:
-        if category.get("challenges"):
-            for chall in category["challenges"]:
-                chall_time = datetime.datetime.strptime(chall["timestamp"], "%Y-%m-%d %H:%M:%S")
-                if chall_time >= time_d:
-                    app += f"```✅ {category['title']} : {chall['name']}```\n"
-
-    if app == "" :
-        return None
-    else :
-        res = f"### **{user}** 🥋 Solve :\n" + app + "_"+maxime_quote()+"_"
-    return res
-
-
-def read_info(user):
-    debug(f"reading info for {user}")
-    with open(f"users/{user}", "r") as f:
-        j = json.loads(f.read())
-        res = ""
-        for category in j:
-            if category["challenges"]:
-                res += category["title"] + ":\n"
-                debug(f'category {category["title"]}')
-                for chall in category["challenges"]:
-                    res += "    ✅ - " + chall["name"] + "\n"
-                    debug(f'chall {chall["name"]}')
-    return res
-
-
-def get_grade_cate_user(category_check, user):
-
-    with open(f"users/{user}", "r") as f:
-        j = json.load(f)
-
-    grades_cate = 0
-    for category in j:
-        if category.get("challenges") and category.get("title") == category_check:
-            for chall in category["challenges"]:
-                    grades_cate += 1 
-
-    return grades_cate
+            else :
+                if challenge_category not in solves_informations :
+                    solves_informations[challenge_category] = []
+                solves_informations[challenge_category].append([level, solved_at])
+        
+        # Count the number of solves
+        solves_count = sum(len(solves) for solves in solves_informations.values())
+        
+        debug(f"User {username} has {solves_count} solves{' in category ' + category if category else ''}.")
+        
+        return UserInformations(
+            username=username,
+            userId=userId,
+            solves=solves_informations,
+            solves_count=solves_count
+        )
