@@ -10,6 +10,19 @@ sys.path.insert(0, parent_dir)
 from lib.debug import *
 
 class UserInformations():
+    """
+    UserInformations object.
+    
+    Used to store the user information and the solves of the user.
+    
+    :param username: The username of the user.
+    
+    :param userId: The userId of the user.
+    :param solves: A dictionary containing the solves of the user, where the key is the
+                    category and the value is a list of lists containing the level and the date of the solve.
+    
+    :param solves_count: The number of solves of the user.
+    """
     def __init__(
         self,
         username: str,
@@ -17,14 +30,6 @@ class UserInformations():
         solves: dict | None = None,
         solves_count: int = 0
     ):
-        """
-        Initialize the UserInformations object.
-        :param username: The username of the user.
-        :param userId: The userId of the user.
-        :param solves: A dictionary containing the solves of the user, where the key is the
-                      category and the value is a list of lists containing the level and the date of the solve.
-        :param solves_count: The number of solves of the user.
-        """
         self.username = username
         self.userId = userId
         self.solves = solves if solves is not None else {}
@@ -36,6 +41,22 @@ class UserInformations():
         return f"UserInformations(username={self.username}, userId={self.userId}, solves_count={self.solves_count})"
     
 class pwncollegeUser:
+    """
+    pwncollegeUser class.
+    
+    Used to get the user solves from the pwncollege API.
+    
+    Usage:
+    ```
+    pwncollege = pwncollegeUser()
+    user_solves = pwncollege.get_user_solves(
+        username="USER",
+        category="dynamic-allocator-misuse", # Optional: filter solves by category
+        since=datetime.datetime(2024, 6, 1) # Optional: filter solves since a specific date
+    )
+    print(user_solves)
+    ```
+    """
     def __init__(self):
         self.user_url = "https://pwn.college/hacker/{}"
         self.users_solves_url = "https://pwn.college/api/v1/users/{}/solves"
@@ -49,6 +70,17 @@ class pwncollegeUser:
     ) -> UserInformations:
         """
         Get the user solves from the pwncollege API.
+        
+        :param username: The username of the user to get the solves for.
+                        If None, the function will raise an exception.
+        
+        :param category: The category of the challenges to filter the solves by.
+                        If None, all categories will be returned.
+                        
+        :param since: A datetime object to filter the solves by date.
+                        If None, all solves will be returned.
+        
+        :return: A UserInformations object containing the user information and the solves of the user.
         """
         
         debug(f"Getting info for : {username}")
@@ -96,7 +128,9 @@ class pwncollegeUser:
             challenge_name = solve.get("challenge", {}).get("name", None)
             challenge_category, level = challenge_name.split(":", 1) if challenge_name else (None, None)
             
-            if category and challenge_category != category:
+            if (
+                category and challenge_category != category
+            ) or (since and solved_at < since.replace(tzinfo=datetime.timezone.utc)):
                 continue
             elif challenge_category is None or level is None:
                 debug(f"Challenge category or level is None for challenge: {challenge_name}")

@@ -1,5 +1,5 @@
 
-import sys, os
+import sys, os, datetime
 
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
@@ -8,10 +8,11 @@ from lib.pwncollege_user import *
 
 
 pwncollege = pwncollegeUser()
-category = None #"dynamic-allocator-misuse"
+category = "dynamic-allocator-misuse"
 nb_challenge_solved: UserInformations = pwncollege.get_user_solves(
     username="Mbahal",
-    category=category,
+    category=category, # Optional: filter solves by category
+    since=datetime.datetime(2024, 6, 1)  # Optional: filter solves since a specific date
 )
 print(f"NB chall solved : {nb_challenge_solved.solves_count}")
 for key in nb_challenge_solved.solves.keys():
