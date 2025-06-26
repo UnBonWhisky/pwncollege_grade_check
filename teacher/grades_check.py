@@ -8,15 +8,14 @@ from lib.pwncollege_user import *
 
 
 pwncollege = pwncollegeUser()
-category = "dynamic-allocator-misuse"
+username = "UnBonWhisky"
+category = None#"dynamic-allocator-misuse"
+since= None#datetime.datetime(2024, 6, 1)
 nb_challenge_solved: UserInformations = pwncollege.get_user_solves(
-    username="Mbahal",
+    username=username,
     category=category, # Optional: filter solves by category
-    since=datetime.datetime(2024, 6, 1)  # Optional: filter solves since a specific date
+    since=since  # Optional: filter solves since a specific date
 )
 for key in nb_challenge_solved.solves.keys():
     print(f"Category: {key}")
-    print("Solves :")
-    for solve in nb_challenge_solved.solves[key] :
-        print(f"  - {solve[0]} : {solve[1].strftime('%Y-%m-%d %H:%M:%S') if solve[1] else 'Unknown'}")
-    print("\n", end="")
+    print(f"Solves : {len(nb_challenge_solved.solves[key])}", end="\n\n")
