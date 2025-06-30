@@ -18,4 +18,7 @@ nb_challenge_solved: UserInformations = pwncollege.get_user_solves(
 )
 for key in nb_challenge_solved.solves.keys():
     print(f"Category: {key}")
-    print(f"Solves : {len(nb_challenge_solved.solves[key])}", end="\n\n")
+    print(f"Solves : {len(nb_challenge_solved.solves[key])}", end="\n")
+    # for challenge in nb_challenge_solved.solves[key]:
+    #     print(f"  - {challenge[0]} at {challenge[1].strftime('%Y-%m-%d %H:%M:%S')} UTC")
+    # print("\n", end="")
